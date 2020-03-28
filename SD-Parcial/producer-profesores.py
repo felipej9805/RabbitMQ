@@ -12,7 +12,7 @@ channel = connection.channel()
 
 channel.exchange_declare(exchange='general', exchange_type='direct')
 
-message = 'Hello World!'
+message = 'Hello teachers!!'
 
 channel.basic_publish(
     exchange='general', routing_key='profesores', body=message)
