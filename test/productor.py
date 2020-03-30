@@ -2,19 +2,17 @@
 import pika
 import sys
 
+#Las credenciales para conectarnos al servidor RabbitMQ
+#credentials = pika.PlainCredentials('root','password')
+
+#Conexion con nuestro servidor RabbitMQ
 connection = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost'))
 channel = connection.channel()
 
-#Exchange: De un lado recibe mensajes del productor y del otro lado los empuja en una cola
-channel.exchange_declare(exchange='mensajes', 
-    exchange_type='direct')
+channel.exchange_declare(exchange='broadcast', exchange_type='fanout')
 
-severity = sys.argv[1] if len(sys.argv) > 1 else 'info'
-
-message = ' '.join(sys.argv[2:]) or 'Saludos a todos'
-
-channel.basic_publish(
-    exchange='mensajes', routing_key=severity, body=message)
-print(" [x] Sent %r:%r" % (severity, message))
+message = "Hello Everyone!!"
+channel.basic_publish(exchange='broadcast', routing_key='general', body=message)
+print(" [x] Sent %r" % message)
 connection.close()

@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 import pika
 import sys
-
 #Las credenciales para conectarnos al servidor RabbitMQ
 credentials = pika.PlainCredentials('root','password')
 
 #Conexion con nuestro servidor RabbitMQ
 connection = pika.BlockingConnection(
-    pika.ConnectionParameters('192.168.0.10', credentials=credentials))
+    pika.ConnectionParameters(host='localhost'))
 channel = connection.channel()
 
 channelBroadcast= connection.channel()
@@ -18,14 +17,16 @@ channel.exchange_declare(exchange='general', exchange_type='direct')
 channelBroadcast.exchange_declare(exchange='broadcast', exchange_type='fanout')
 
 
-result = channel.queue_declare(queue='estudiantes', exclusive=True)
+result = channel.queue_declare(queue='profesores', exclusive=True)
 queue_name = result.method.queue
 
-resultBroadcast = channelBroadcast.queue_declare(queue='broadcast', exclusive=True)
+resultBroadcast = channelBroadcast.queue_declare(queue='broadcast1', exclusive=True)
 queue_nameBroadcast = resultBroadcast.method.queue
 
-channel.queue_bind(exchange='general', queue='estudiantes', routing_key='estudiantes')
-channelBroadcast.queue_bind(exchange='broadcast', queue='broadcast', routing_key='general')
+
+
+channel.queue_bind(exchange='general', queue='profesores', routing_key='profesores')
+channelBroadcast.queue_bind(exchange='broadcast', queue='broadcast1', routing_key='')
 
 print(' [*] Waiting for logs. To exit press CTRL+C')
 
