@@ -26,7 +26,7 @@ queue_nameBroadcast = resultBroadcast.method.queue
 
 
 channel.queue_bind(exchange='general', queue='profesores', routing_key='profesores')
-channelBroadcast.queue_bind(exchange='broadcast', queue='broadcast1', routing_key='general')
+channelBroadcast.queue_bind(exchange='broadcast', queue='broadcast1', routing_key='')
 
 print(' [*] Waiting for logs. To exit press CTRL+C')
 
