@@ -2,32 +2,40 @@
 import pika
 import sys
 
+#Las credenciales para conectarnos al servidor RabbitMQ
+credentials = pika.PlainCredentials('root','password')
+
+#Conexion con nuestro servidor RabbitMQ
 connection = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost'))
 channel = connection.channel()
 
-channel.exchange_declare(exchange='mensajes', exchange_type='direct')
+channelBroadcast= connection.channel()
 
-result = channel.queue_declare(queue='', exclusive=True)
+
+channel.exchange_declare(exchange='general', exchange_type='direct')
+
+channelBroadcast.exchange_declare(exchange='broadcast', exchange_type='fanout')
+
+
+result = channel.queue_declare(queue='estudiantes', exclusive=True)
 queue_name = result.method.queue
 
-severities = sys.argv[1:]
-if not severities:
-    sys.stderr.write("Usage: %s [estudiante] [profesor] [general]\n" % sys.argv[0])
-    sys.exit(1)
+resultBroadcast = channelBroadcast.queue_declare(queue='broadcast', exclusive=True)
+queue_nameBroadcast = resultBroadcast.method.queue
 
-for severity in severities:
-    channel.queue_bind(
-        exchange='mensajes', queue=queue_name, routing_key=severity)
+channel.queue_bind(exchange='general', queue='estudiantes', routing_key='estudiantes')
+channelBroadcast.queue_bind(exchange='broadcast', queue='broadcast', routing_key='general')
 
-print(' [*] Waiting for messages. To exit press CTRL+C')
+print(' [*] Waiting for logs. To exit press CTRL+C')
 
 
 def callback(ch, method, properties, body):
     print(" [x] %r:%r" % (method.routing_key, body))
 
 
-channel.basic_consume(
-    queue=queue_name, on_message_callback=callback, auto_ack=True)
+channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
+channelBroadcast.basic_consume(queue=queue_nameBroadcast, on_message_callback=callback, auto_ack=True)
 
+channelBroadcast.start_consuming()
 channel.start_consuming()
